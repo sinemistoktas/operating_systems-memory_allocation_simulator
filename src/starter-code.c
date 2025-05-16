@@ -70,7 +70,7 @@ Prints an error message to the screen.
 
 int main(int argc, char *argv[]) {
 	/* TODO: fill the line below with your names and ids */
-	printf(" Group Name: ___________  \n Student(s) Name: ______________ \n Student(s) ID: _______________");
+	printf(" Group Name: Hole Lotta Trouble  \n Student(s) Name: Sinemis Toktaş & Atalay Görgün \n Student(s) ID: 76644 & 79925");
     
     // initialize first hole
     if(argc == 2) {
