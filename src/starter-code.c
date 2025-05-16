@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 
-// ************************************** BLOCK **************************************
+// *************************************** BLOCK ***************************************
 // linked list structure for memory blocks
 typedef struct Block {
     char PID[10];         // process id name -> "hole" if unused
@@ -35,7 +35,31 @@ void setNext(Block *current, Block *nextBlock) {
 // init head pointer of linked list
 Block *head = NULL;
 
-// ***********************************************************************************
+// ************************************************************************************
+
+
+// ********************************* helper functions *********************************
+
+// Converts a string to lowercase
+char* lowercase(char *s) {
+    // source for tolower() : https://www.geeksforgeeks.org/tolower-function-in-c/
+
+    size_t len = strlen(s);
+    char *lowered = malloc(len + 1); // copy string
+    if (!lowered) return NULL;
+
+    for (int i = 0; i < len; i++) { // loop each char to lowercase
+        lowered[i] = tolower(s[i]);
+    }
+
+    lowered[len] = '\0'; // add last 
+    //printf("\n%s\n", lowered); // debug
+    return lowered;
+}
+
+
+// ************************************************************************************
+
 
 
 void allocate(char* PID, int size, char *type){
@@ -102,16 +126,18 @@ Prints an error message to the screen.
 
 int main(int argc, char *argv[]) {
 	/* TODO: fill the line below with your names and ids */
-	printf(" Group Name: Hole Lotta Trouble  \n Student(s) Name: Sinemis Toktaş \n Student(s) ID: 0076644");
+	printf(" Group Name: Hole Lotta Trouble  \n Student(s) Name: Sinemis Toktaş \n Student(s) ID: 0076644\n ");
+
     
     // initialize first hole
     if(argc == 2) {
-        
 		/* TODO: Interactive mode */
 
         int int_memory_amount = atoi(argv[1]);  // get initial memory amount from arguments
-        
-		printf("HOLE INITIALIZED AT ADDRESS %d WITH %d BYTES\n",/* TODO*/, /* TODO*/);
+        head = createBlock("hole", 0, int_memory_amount); // init main memory as one GIANT hole
+
+		printf("HOLE INITIALIZED AT ADDRESS %d WITH %d BYTES\n", head->base, head->limit);
+
     } else if(argc == 3) {
 		/* TODO: Scripted mode*/
 		
@@ -144,7 +170,8 @@ int main(int argc, char *argv[]) {
         }
 		
 		// TODO: make commands case insensitive, i.e. should accept rq,RQ,rl,RL,stat,STAT,c,C,exit,EXIT
-        
+        arguments[0] = lowercase(arguments[0]);
+
         // RQ (Request Memory / allocate): Needs 4 arguments and must check if they are valid arguments
         if(strcmp(arguments[0], "rq") == 0){
             if(  /* TODO */  ){
