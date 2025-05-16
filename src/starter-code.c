@@ -3,7 +3,39 @@
 #include <ctype.h>
 #include <string.h>
 
+// ************************************** BLOCK **************************************
+// linked list structure for memory blocks
+typedef struct Block {
+    char PID[10];         // process id name -> "hole" if unused
+    int base;   // start address
+    int limit;  // number of bytes 
+    struct Block *next;   // pointer to next block
+} Block;
 
+// block constructor
+Block *createBlock(const char *PID, int base, int limit) {
+    Block *newBlock = (Block *) malloc(sizeof(Block)); // allocate memory to hold a Block
+    strcpy(newBlock->PID, PID); // set process id name of the new block
+    newBlock->base = base; // set base
+    newBlock->limit = limit; // set limit
+    newBlock->next = NULL; // set new block's next pointer to null
+    return newBlock; // return pointer to new block
+}
+
+// getter for start and end addresses of blocks based on base and limit values
+int getStart(Block *b) { return b->base; } // start address
+int getEnd(Block *b)   { return b->base + b->limit - 1; } // end address = base + limit - 1
+
+// setter for next pointer
+void setNext(Block *current, Block *nextBlock) {
+    current->next = nextBlock;
+}
+
+
+// init head pointer of linked list
+Block *head = NULL;
+
+// ***********************************************************************************
 
 
 void allocate(char* PID, int size, char *type){
@@ -70,12 +102,14 @@ Prints an error message to the screen.
 
 int main(int argc, char *argv[]) {
 	/* TODO: fill the line below with your names and ids */
-	printf(" Group Name: Hole Lotta Trouble  \n Student(s) Name: Sinemis Toktaş & Atalay Görgün \n Student(s) ID: 76644 & 79925");
+	printf(" Group Name: Hole Lotta Trouble  \n Student(s) Name: Sinemis Toktaş \n Student(s) ID: 0076644");
     
     // initialize first hole
     if(argc == 2) {
         
 		/* TODO: Interactive mode */
+
+        int int_memory_amount = atoi(argv[1]);  // get initial memory amount from arguments
         
 		printf("HOLE INITIALIZED AT ADDRESS %d WITH %d BYTES\n",/* TODO*/, /* TODO*/);
     } else if(argc == 3) {
