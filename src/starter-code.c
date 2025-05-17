@@ -8,11 +8,12 @@ void printError(char *error); // function prototype for early calls
 const char *HOLE_PID = "Unused";
 
 // *************************************** BLOCK ***************************************
-// linked list structure for memory -> blocks are nodes
+// doubly linked list structure for memory -> blocks are nodes
 typedef struct Block {
     char PID[10];         // process id name -> "Unused" if unused
     int base;   // start address
     int limit;  // number of bytes 
+    struct Block *prev; // pointer to previous block
     struct Block *next;   // pointer to next block
 } Block;
 
@@ -22,6 +23,7 @@ Block *createBlock(const char *PID, int base, int limit) {
     strcpy(newBlock->PID, PID); // set process id name of the new block
     newBlock->base = base; // set base
     newBlock->limit = limit; // set limit
+    newBlock->prev = NULL; // set new block's prev pointer to null
     newBlock->next = NULL; // set new block's next pointer to null
     return newBlock; // return pointer to new block
 }
@@ -104,18 +106,28 @@ void allocate(char* PID, int size, char *type){
 allocates memory from a hole to a process based on the algorithm chosen.
 Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst fit.
 */
+    // argument validation
     if (pidExists(PID)){ // check if there is already a process with given PID
         printError("ERROR: Given PID already exists!");
         return; // we can't allow PID duplicates because it would corrupt allocation logic
     }
 
-    char flag = tolower(type[0]);
+    if (size <= 0) {
+        printError("ERROR: Invalid memory request size.");
+        return;
+    }
+
+    char flag = tolower(type[0]); // make strategy flag case-insensitive
+    if (flag != 'f' && flag != 'b' && flag != 'w') {
+        printError("ERROR: Invalid allocation strategy, must be F, B, or W.");
+        return;
+    }
+    
+
+    Block *current = memory.head; // current pointer to head
 
     if (flag == 'f') {
         // First-fit logic
-
-        Block *previous = NULL; // previous node pointer
-        Block *current = memory.head; // current pointer to head
 
         while (current != NULL) { // loop through linked list
             if (isHole(current) && hasEnoughSpace(current, size) ){
@@ -127,125 +139,87 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
                     Block *newProcess = createBlock(PID, current->base, size); // create memory block for new process
 
                     // insert new process block before current block
+                    newProcess->prev = current->prev;
                     newProcess->next = current;
-                    if (previous == NULL) {
+                    if (current->prev == NULL) {
                         memory.head = newProcess; // inserting at head
                     } else {
-                        previous->next = newProcess; // inserting in middle
+                        current->prev->next = newProcess; // inserting in middle
                     }
+                    current->prev = newProcess;
 
                     // update current block's base and limit 
-                    current->base = current->base + size;
-                    current->limit = current->limit - size;
+                    current->base += size;
+                    current->limit -= size;
                 }
+                
                 return;
             }
             
-            // update pointers after each loop
-            previous = current;
+            // update current pointer after each loop
             current = current->next;
         }
 
-        printError("ERROR: Not enough memory.");
+        printError("ERROR: Insufficient memory to allocate to the request.");
         return;
 
-    } else if (flag == 'b' || flag == 'w') {
+    } else { // Best-fit & Worst-fit logic
 
         Block *bestFit = NULL; // for best-fit logic
         Block *worstFit = NULL; // for worst-fit logic
         int bestFitSize = memory.total_memory; // possible max size
         int worstFitSize = -1;
-        Block *bestFitPrev = NULL; // previous block of bestFit
-        Block *worstFitPrev = NULL; // previous block of worstFit
-
-        Block *previous = NULL; // previous node pointer
-        Block *current = memory.head; // current pointer to head
 
         while (current != NULL) { // loop through linked list
             if (isHole(current) && hasEnoughSpace(current, size) ){
                 // this block is allocatable
                 if (current->limit < bestFitSize){ // check if current is the smallest hole we have found -> for best-fit logic
                     bestFit = current; // save current as best fit block
-                    bestFitPrev = previous; // save previous as best fit block's previous
                     bestFitSize = current->limit; // update bestFitSize
                 }
                 else if (current->limit > worstFitSize){ // check if current is the biggest hole we have found -> for worst-fit logic
                     worstFit = current; // save current as worst fit block
-                    worstFitPrev = previous; // save previous as worst fit block's previous
                     worstFitSize = current->limit; // update worstFitSize
                 }
             }
 
-            // update pointers after each loop
-            previous = current;
+            // update current pointer after each loop
             current = current->next;
         }
 
-        // after looping through whole memory is finished
-        if (flag == 'b') {
-            // Best-fit logic
+        // after looping through whole memory is finished, we insert new block
+        Block *target = NULL;
+        if (flag == 'b') target = bestFit; // for best-fit logic
+        else if (flag == 'w') target = worstFit; // for worst-fit logic
 
-            if (bestFit == NULL) {
-                printError("ERROR: Insufficient memory to allocate to the request.");
-                return;
-            }
-
-            if (bestFit->limit == size){ // limit = size, no fragmentation 
-                strcpy(bestFit->PID, PID); // just change name of current block
-            }
-            else{ // limit > size
-                Block *newProcess = createBlock(PID, bestFit->base, size); // create memory block for new process
-
-                // insert new process block before current block
-                newProcess->next = bestFit;
-                if (bestFitPrev == NULL) {
-                    memory.head = newProcess; // inserting at head
-                } else {
-                    bestFitPrev->next = newProcess; // inserting in middle
-                }
-
-                // update current block's base and limit 
-                bestFit->base = bestFit->base + size;
-                bestFit->limit = bestFit->limit - size;
-            }
-
-            return;
-
-        } else if (flag == 'w') {
-        // Worst-fit logic
-
-            if (worstFit == NULL) {
-                printError("ERROR: Insufficient memory to allocate to the request.");
-                return;
-            }
-
-            if (worstFit->limit == size){ // limit = size, no fragmentation 
-                strcpy(worstFit->PID, PID); // just change name of current block
-            }
-            else{ // limit > size
-                Block *newProcess = createBlock(PID, worstFit->base, size); // create memory block for new process
-
-                // insert new process block before current block
-                newProcess->next = worstFit;
-                if (worstFitPrev == NULL) {
-                    memory.head = newProcess; // inserting at head
-                } else {
-                    worstFitPrev->next = newProcess; // inserting in middle
-                }
-
-                // update current block's base and limit 
-                worstFit->base = worstFit->base + size;
-                worstFit->limit = worstFit->limit - size;
-            }
-
+        if (target == NULL) {
+            printError("ERROR: Insufficient memory to allocate to the request.");
             return;
         }
 
-    } else {
-        printError("ERROR: Invalid allocation strategy.");
+        if (target->limit == size){ // limit = size, no fragmentation 
+            strcpy(target->PID, PID); // just change name of target block
+        }
+        else{ // limit > size
+            Block *newProcess = createBlock(PID, target->base, size); // create memory block for new process
+
+            // insert new process block before target block
+            newProcess->prev = target->prev;
+            newProcess->next = target;
+            if (target->prev == NULL) {
+                memory.head = newProcess; // inserting at head
+            } else {
+                target->prev->next = newProcess; // inserting in middle
+            }
+            target->prev = newProcess;
+
+            // update current block's base and limit 
+            target->base += size;
+            target->limit -= size;
+        }
+
         return;
     }
-    
 }
 
 
@@ -262,9 +236,23 @@ If the hole is adjacent to another hole, the two holes should be merged.
     Block *current = memory.head; // current pointer to head
 
     while (current != NULL) { // loop through linked list
+        // edge case start and end
         if (strcmp(current->PID, PID) == 0){ // find the block with given PID
-
+            // deallocate current block
+            current->PID = HOLE_PID;
+            // check if previous is hole for merging
+            if (isHole(previous)){
+                previous->limit = previous->limit + current->limit; // elongate previous block's limit with current's limit to merge
+            }
+            // check if next is hole for merging
+            Block *next = current->next;
+            if (isHole(next)){
+                previous->limit = previous->limit + current->limit; // elongate previous block's limit with current's limit to merge
+            }
         }
+        // update pointers
+        previous = current;
+        current = current->next;
     }
 }
 
