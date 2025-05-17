@@ -213,7 +213,7 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
             }
             target->prev = newProcess;
 
-            // update current block's base and limit 
+            // update target block's base and limit 
             target->base += size;
             target->limit -= size;
         }
@@ -231,29 +231,57 @@ void deallocate(char* PID){
 Deallocates memory from a process to a hole.
 If the hole is adjacent to another hole, the two holes should be merged.
 */
+    // argument validation
+    if (strcmp(PID, HOLE_PID) == 0) {
+        printError("ERROR: Can not deallocate a hole.");
+        return;
+    }
+    
 
-    Block *previous = NULL; // previous node pointer
     Block *current = memory.head; // current pointer to head
 
     while (current != NULL) { // loop through linked list
         // edge case start and end
-        if (strcmp(current->PID, PID) == 0){ // find the block with given PID
-            // deallocate current block
-            current->PID = HOLE_PID;
-            // check if previous is hole for merging
-            if (isHole(previous)){
-                previous->limit = previous->limit + current->limit; // elongate previous block's limit with current's limit to merge
+        if (!isHole(current) && strcmp(current->PID, PID) == 0){ // find the block with given PID
+            // deallocate current block by turning it to a hole
+            strcpy(current->PID, HOLE_PID);
+
+            // if prev and next are holes, current will be merged into one large block with prev and next
+
+            // check if next block is hole -> for merging
+            if (current->next != NULL && isHole(current->next)){ // check if current is not last node AND next block is hole
+                Block *next = current->next; // get a pointer to next block
+                current->limit += next->limit; // elongate current block's limit with next block's limit to merge
+                current->next = next->next; // update merged current block's next pointer to block after next block or NULL if next block was last node
+                
+                if (next->next != NULL){ // check if next block is not last node
+                    next->next->prev = current; // update block after next block's prev pointer to point to merged current block
+                }
+                free(next); // dealloc memory block next points to -> remove next block since its already merged with current block
             }
-            // check if next is hole for merging
-            Block *next = current->next;
-            if (isHole(next)){
-                previous->limit = previous->limit + current->limit; // elongate previous block's limit with current's limit to merge
+
+
+            // check if previous block is hole -> for merging
+            if (current->prev != NULL && isHole(current->prev)){ // check if current is not head node AND next prev is hole
+                Block *previous = current->prev; // get a pointer to previous block
+                previous->limit += current->limit; // elongate previous block's limit with current block's limit to merge
+                previous->next = current->next; // update merged previous block's next pointer to block after current block
+                
+                if (current->next != NULL){ // check if current block is not last node
+                    current->next->prev = previous; // update next block's prev pointer to point to merged (previous+current) block
+                }
+                free(current); // dealloc memory at current block -> remove current block since its already merged with previous block
             }
+
+            return; // deallocate done
+        
         }
-        // update pointers
-        previous = current;
+
+        // update current pointer
         current = current->next;
     }
+    // else -> PID was not found
+    printError("ERROR: Given PID does not exist in memory.");
 }
 
 
