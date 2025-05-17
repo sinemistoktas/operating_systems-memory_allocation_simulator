@@ -318,6 +318,7 @@ void compact(){
 /*
 Compacts the memory allocations by shifting all current allocations to the top and combining all holes into a single hole.
 */
+// shift all memory blocks to top and shift all holes to bottom to form one giant hole, like the hole in my heart
 }
 
 
