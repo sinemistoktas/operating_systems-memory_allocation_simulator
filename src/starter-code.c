@@ -59,6 +59,22 @@ typedef struct {
 
 Memory memory;  // Global memory initiated
 
+
+// function for checking that there are no processes with the same PID
+bool pidExists(const char *PID){
+    // used for not allowing duplicate PID names
+
+    Block *current = memory.head;
+
+    while (current != NULL){
+        if (!isHole(current) && strcmp(current->PID, PID) == 0){ // pass holes and check if process with given PID already exists
+            return true;
+        } 
+        current = current->next; // update current pointer
+    }
+    return false;
+} 
+
 // *************************************************************************************
 
 
@@ -88,6 +104,11 @@ void allocate(char* PID, int size, char *type){
 allocates memory from a hole to a process based on the algorithm chosen.
 Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst fit.
 */
+    if (pidExists(PID)){ // check if there is already a process with given PID
+        printError("ERROR: Given PID already exists!");
+        return; // we can't allow PID duplicates because it would corrupt allocation logic
+    }
+
     char flag = tolower(type[0]);
 
     if (flag == 'f') {
@@ -236,6 +257,15 @@ void deallocate(char* PID){
 Deallocates memory from a process to a hole.
 If the hole is adjacent to another hole, the two holes should be merged.
 */
+
+    Block *previous = NULL; // previous node pointer
+    Block *current = memory.head; // current pointer to head
+
+    while (current != NULL) { // loop through linked list
+        if (strcmp(current->PID, PID) == 0){ // find the block with given PID
+
+        }
+    }
 }
 
 
