@@ -54,6 +54,9 @@ typedef struct {
     int total_memory;  // size of the memory 
 } Memory;
 
+
+Memory memory;  // Global memory initiated
+
 // *************************************************************************************
 
 
@@ -62,20 +65,13 @@ typedef struct {
 // ********************************* helper functions **********************************
 
 // Converts a string to lowercase
-char* lowercase(char *s) {
+void lowercase(char *s) {
     // source for tolower() : https://www.geeksforgeeks.org/tolower-function-in-c/
 
-    size_t len = strlen(s);
-    char *lowered = malloc(len + 1); // copy string
-    if (!lowered) return NULL;
-
-    for (int i = 0; i < len; i++) { // loop each char to lowercase
-        lowered[i] = tolower(s[i]);
+    for (int i = 0; s[i]; i++) {
+        s[i] = tolower(s[i]);
     }
-
-    lowered[len] = '\0'; // add last 
-    //printf("\n%s\n", lowered); // debug
-    return lowered;
+    
 }
 
 
@@ -294,7 +290,6 @@ int main(int argc, char *argv[]) {
         int int_memory_amount = atoi(argv[1]);  // get initial memory amount from arguments
 
         // initialize memory as linked list
-        Memory memory; 
         memory.total_memory = int_memory_amount;
         memory.head = createBlock(HOLE_PID, 0, int_memory_amount); // init main memory as one GIANT hole
 
