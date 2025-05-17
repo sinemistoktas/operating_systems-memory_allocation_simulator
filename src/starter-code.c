@@ -318,7 +318,58 @@ void compact(){
 /*
 Compacts the memory allocations by shifting all current allocations to the top and combining all holes into a single hole.
 */
-// shift all memory blocks to top and shift all holes to bottom to form one giant hole, like the hole in my heart
+// shift all memory blocks to top and shift all holes to bottom to form one giant hole
+
+    // initalize new variables to form a new shuffled memory list
+    int base = 0; // to store base value for the blocks I will create while shuffling 
+    int totalHoleSpace = 0; // to store total amount of hole block memory space
+    Block *newHead = NULL; // pointer to new head
+    Block *lastProcess = NULL; // to store pointer to last (non-hole) process block
+    Block *current = memory.head; // current pointer to head
+
+    while (current != NULL) {
+        if (!isHole(current)){  // if current block is not a hole
+            Block *shuffledBlock = createBlock(current->PID, base, current->limit); // create a new block to shuffle the process block
+            base += current->limit; // update base by adding current block's limit
+
+            // set newHead to first process block found
+            if (newHead == NULL){ 
+                newHead = shuffledBlock;
+            } 
+            else { // for non-first process blocks 
+                shuffledBlock->prev = lastProcess; // set new (shuffled) process block's prev pointer to the last process block
+                lastProcess->next = shuffledBlock; // set last process block's next pointer to the new process block
+            }
+
+            // update last process block pointer for the next shuffles
+            lastProcess = shuffledBlock; 
+
+        } else {  // else, if current block is hole
+            totalHoleSpace += current->limit; // update how much hole space we have
+        }
+
+        // update current pointer to next by also removing current node
+        Block *next = current->next;
+        free(current); // remove current node's block
+        current = next; // update current pointer
+    }
+
+    // create one giant hole at bottom
+    if (totalHoleSpace > 0) { // if we had holes
+        Block *giantHole = createBlock(HOLE_PID, base, totalHoleSpace); // create one giant hole block
+
+        if (lastProcess != NULL){ // if we had a process block
+            // link last memory block to giant hole block
+            giantHole->prev = lastProcess; 
+            lastProcess->next = giantHole;
+        }
+        else{ // if we didn't had any process 
+            newHead = giantHole; // point new head to giant hole block
+        }
+    }
+
+    // Lastly, update Memory head to point to new head
+    memory.head = newHead;
 }
 
 
