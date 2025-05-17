@@ -119,13 +119,96 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
 
     } else if (flag == 'b' || flag == 'w') {
 
-        // Best-fit logic
+        Block *bestFit = NULL; // for best-fit logic
+        Block *worstFit = NULL; // for worst-fit logic
+        int bestFitSize = memory->total_memory; // possible max size
+        int worstFitSize = -1;
+        Block *bestFitPrev = NULL; // previous block of bestFit
+        Block *worstFitPrev = NULL; // previous block of worstFit
 
+        Block *previous = NULL; // previous node pointer
+        Block *current = memory.head; // current pointer to head
 
-    } else if () {
+        while (current != NULL) { // loop through linked list
+            if (isHole(current) && hasEnoughSpace(current, size) ){
+                // this block is allocatable
+                if (current->limit < bestFitSize){ // check if current is the smallest hole we have found -> for best-fit logic
+                    bestFit = current; // save current as best fit block
+                    bestFitPrev = previous; // save previous as best fit block's previous
+                    bestFitSize = current->limit; // update bestFitSize
+                }
+                else if (current->limit > worstFitSize){ // check if current is the biggest hole we have found -> for worst-fit logic
+                    worstFit = current; // save current as worst fit block
+                    worstFitPrev = previous; // save previous as worst fit block's previous
+                    worstFitSize = current->limit; // update worstFitSize
+                }
+            }
+
+            // update pointers after each loop
+            previous = current;
+            current = current->next;
+        }
+
+        // after looping through whole memory is finished
+        if (flag == 'b') {
+            // Best-fit logic
+
+            if (bestFit == NULL) {
+                printError("ERROR: Not enough memory");
+                return;
+            }
+
+            if (bestFit->limit == size){ // limit = size, no fragmentation 
+                strcpy(bestFit->PID, PID); // just change name of current block
+            }
+            else{ // limit > size
+                Block *newProcess = createBlock(PID, bestFit->base, size); // create memory block for new process
+
+                // insert new process block before current block
+                newProcess->next = bestFit;
+                if (bestFitPrev == NULL) {
+                    memory.head = newProcess; // inserting at head
+                } else {
+                    bestFitPrev->next = newProcess; // inserting in middle
+                }
+
+                // update current block's base and limit 
+                bestFit->base = bestFit->base + size;
+                bestFit->limit = bestFit->limit - size;
+            }
+
+            return;
+
+        } else if (flag == 'w') {
         // Worst-fit logic
 
+            if (worstFit == NULL) {
+                printError("ERROR: Not enough memory");
+                return;
+            }
 
+            if (worstFit->limit == size){ // limit = size, no fragmentation 
+                strcpy(worstFit->PID, PID); // just change name of current block
+            }
+            else{ // limit > size
+                Block *newProcess = createBlock(PID, worstFit->base, size); // create memory block for new process
+
+                // insert new process block before current block
+                newProcess->next = worstFit;
+                if (worstFitPrev == NULL) {
+                    memory.head = newProcess; // inserting at head
+                } else {
+                    worstFitPrev->next = newProcess; // inserting in middle
+                }
+
+                // update current block's base and limit 
+                worstFit->base = worstFit->base + size;
+                worstFit->limit = worstFit->limit - size;
+            }
+
+            return;
+        }
+        
     } else {
         printError("ERROR: Invalid allocation strategy");
         return;
