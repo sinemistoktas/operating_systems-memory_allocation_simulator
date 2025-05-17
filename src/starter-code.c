@@ -3,10 +3,12 @@
 #include <ctype.h>
 #include <string.h>
 
+const char *HOLE_PID = "Unused";
+
 // *************************************** BLOCK ***************************************
 // linked list structure for memory -> blocks are nodes
 typedef struct Block {
-    char PID[10];         // process id name -> "hole" if unused
+    char PID[10];         // process id name -> "Unused" if unused
     int base;   // start address
     int limit;  // number of bytes 
     struct Block *next;   // pointer to next block
@@ -22,17 +24,27 @@ Block *createBlock(const char *PID, int base, int limit) {
     return newBlock; // return pointer to new block
 }
 
-// getter for start and end addresses of blocks based on base and limit values
-int getStart(Block *b) { return b->base; } // start address
-int getEnd(Block *b)   { return b->base + b->limit - 1; } // end address = base + limit - 1
-
 // checks if memory block is a hole
-bool isHole(Block *b){ return strcmp(b->PID, "hole") == 0; }
+bool isHole(Block *b){ return strcmp(b->PID, HOLE_PID) == 0; }
 
 // checks if memory block has enough space
 bool hasEnoughSpace (Block *b, int size){ return b->limit >= size; }
 
+// printer for block to use for STAT
+void printBlock(Block *b) {
+    int start = b->base;
+    int end = b->base + b->limit - 1;
+
+    if (isHole(b)) {
+        printf("Addresses [%d:%d] Unused\n", start, end);
+    } else {
+        printf("Addresses [%d:%d] Process %s\n", start, end, b->PID);
+    }
+}
+
 // *************************************************************************************
+
+
 
 // *************************************** MEMORY **************************************
 // linked list structure for memory
@@ -43,6 +55,8 @@ typedef struct {
 } Memory;
 
 // *************************************************************************************
+
+
 
 
 // ********************************* helper functions **********************************
@@ -208,7 +222,7 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
 
             return;
         }
-        
+
     } else {
         printError("ERROR: Invalid allocation strategy");
         return;
@@ -282,7 +296,7 @@ int main(int argc, char *argv[]) {
         // initialize memory as linked list
         Memory memory; 
         memory.total_memory = int_memory_amount;
-        memory.head = createBlock("hole", 0, int_memory_amount); // init main memory as one GIANT hole
+        memory.head = createBlock(HOLE_PID, 0, int_memory_amount); // init main memory as one GIANT hole
 
 		printf("HOLE INITIALIZED AT ADDRESS %d WITH %d BYTES\n", memory.head->base, memory.head->limit);
 
