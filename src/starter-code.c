@@ -343,8 +343,8 @@ int main(int argc, char *argv[]) {
         }
         // RL (Release Memory / Deallocate): Needs 2 arguments and must check if they are valid arguments
         else if(strcmp(arguments[0], "rl") == 0){
-            if(  /* TODO */  ){
-                deallocate(  /* TODO */  );
+            if(  tokenCount == 2  ){
+                deallocate(  arguments[1]  );
             }
             else{
                 printError("ERROR Expected expression: RL \"PID\".");
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
         }
         // STATUS: Needs 1 argument
         else if(strcmp(arguments[0], "stat") == 0){
-            if(  /* TODO*/  ){
+            if(  tokenCount == 1  ){
                 status();
             }
             else{
@@ -361,10 +361,9 @@ int main(int argc, char *argv[]) {
         }
         // C (Compact): Needs 1 argument
         else if(strcmp(arguments[0], "c") == 0){
-            if(  /* TODO*/  ){
-				
+            if(  tokenCount == 1  ){
                 /* TODO*/
-            
+                compact();
 			}
             else{
                 printError("ERROR Expected expression: C.");
