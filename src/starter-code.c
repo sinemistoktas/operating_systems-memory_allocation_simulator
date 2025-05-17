@@ -4,7 +4,7 @@
 #include <string.h>
 
 // *************************************** BLOCK ***************************************
-// linked list structure for memory blocks
+// linked list structure for memory -> blocks are nodes
 typedef struct Block {
     char PID[10];         // process id name -> "hole" if unused
     int base;   // start address
@@ -26,19 +26,26 @@ Block *createBlock(const char *PID, int base, int limit) {
 int getStart(Block *b) { return b->base; } // start address
 int getEnd(Block *b)   { return b->base + b->limit - 1; } // end address = base + limit - 1
 
-// setter for next pointer
-void setNext(Block *current, Block *nextBlock) {
-    current->next = nextBlock;
-}
+// checks if memory block is a hole
+bool isHole(Block *b){ return strcmp(b->PID, "hole") == 0; }
+
+// checks if memory block has enough space
+bool hasEnoughSpace (Block *b, int size){ return b->limit >= size; }
+
+// *************************************************************************************
+
+// *************************************** MEMORY **************************************
+// linked list structure for memory
+
+typedef struct {
+    Block *head;       // pointer to start of memory blocks -> head pointer of linked list
+    int total_memory;  // size of the memory 
+} Memory;
+
+// *************************************************************************************
 
 
-// init head pointer of linked list
-Block *head = NULL;
-
-// ************************************************************************************
-
-
-// ********************************* helper functions *********************************
+// ********************************* helper functions **********************************
 
 // Converts a string to lowercase
 char* lowercase(char *s) {
@@ -58,7 +65,7 @@ char* lowercase(char *s) {
 }
 
 
-// ************************************************************************************
+// *************************************************************************************
 
 
 
@@ -70,6 +77,60 @@ void allocate(char* PID, int size, char *type){
 allocates memory from a hole to a process based on the algorithm chosen.
 Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst fit.
 */
+    char flag = tolower(type[0]);
+
+    if (flag == 'f') {
+        // First-fit logic
+
+        Block *previous = NULL; // previous node pointer
+        Block *current = memory.head; // current pointer to head
+
+        while (current != NULL) { // loop through linked list
+            if (isHole(current) && hasEnoughSpace(current, size) ){
+                // this block is allocatable
+                if (current->limit == size){ // size is equal, no fragmentation 
+                    strcpy(current->PID, PID); // just change name of current block
+                }
+                else{ // current->limit > size
+                    Block *newProcess = createBlock(PID, current->base, size); // create memory block for new process
+
+                    // insert new process block before current block
+                    newProcess->next = current;
+                    if (previous == NULL) {
+                        memory.head = newProcess; // inserting at head
+                    } else {
+                        previous->next = newProcess; // inserting in middle
+                    }
+
+                    // update current block's base and limit 
+                    current->base = current->base + size;
+                    current->limit = current->limit - size;
+                }
+                return;
+            }
+            
+            // update pointers after each loop
+            previous = current;
+            current = current->next;
+        }
+
+        printError("ERROR: Not enough memory");
+        return;
+
+    } else if (flag == 'b' || flag == 'w') {
+
+        // Best-fit logic
+
+
+    } else if () {
+        // Worst-fit logic
+
+
+    } else {
+        printError("ERROR: Invalid allocation strategy");
+        return;
+    }
+    
 }
 
 
@@ -134,9 +195,13 @@ int main(int argc, char *argv[]) {
 		/* TODO: Interactive mode */
 
         int int_memory_amount = atoi(argv[1]);  // get initial memory amount from arguments
-        head = createBlock("hole", 0, int_memory_amount); // init main memory as one GIANT hole
 
-		printf("HOLE INITIALIZED AT ADDRESS %d WITH %d BYTES\n", head->base, head->limit);
+        // initialize memory as linked list
+        Memory memory; 
+        memory.total_memory = int_memory_amount;
+        memory.head = createBlock("hole", 0, int_memory_amount); // init main memory as one GIANT hole
+
+		printf("HOLE INITIALIZED AT ADDRESS %d WITH %d BYTES\n", memory.head->base, memory.head->limit);
 
     } else if(argc == 3) {
 		/* TODO: Scripted mode*/
@@ -174,8 +239,8 @@ int main(int argc, char *argv[]) {
 
         // RQ (Request Memory / allocate): Needs 4 arguments and must check if they are valid arguments
         if(strcmp(arguments[0], "rq") == 0){
-            if(  /* TODO */  ){
-                allocate(  /* TODO*/  );
+            if(  tokenCount == 4  ){
+                allocate(  arguments[1], atoi(arguments[2]), arguments[3] );
             }
             else{
                 printError("ERROR Expected expression: RQ \"PID\" \"Bytes\" \"Algorithm\".");
