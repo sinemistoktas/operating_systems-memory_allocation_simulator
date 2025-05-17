@@ -488,6 +488,8 @@ int main(int argc, char *argv[]) {
 
             // Final STAT output after file read ends
             status();
+
+            return 0; // prevent going to interactive mode
         }
 
 		
