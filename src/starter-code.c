@@ -396,7 +396,7 @@ int main(int argc, char *argv[]) {
     if(argc == 2) {
 		/* TODO: Interactive mode */
 
-        int int_memory_amount = atoi(argv[1]);  // get initial memory amount from arguments
+        int int_memory_amount = atoi(argv[1]);  // get initial memory amount from first argument
 
         // initialize memory as linked list
         memory.total_memory = int_memory_amount;
@@ -406,7 +406,90 @@ int main(int argc, char *argv[]) {
 
     } else if(argc == 3) {
 		/* TODO: Scripted mode*/
-		
+
+        int int_memory_amount = atoi(argv[1]);  // get initial memory amount from first argument
+        char *fileName = argv[2]; // get file name from second argument
+
+        // initialize memory as linked list
+        memory.total_memory = int_memory_amount;
+        memory.head = createBlock(HOLE_PID, 0, int_memory_amount); // init main memory as one GIANT hole
+
+        // open file with given file name in read mode
+        // source: https://www.geeksforgeeks.org/basics-file-handling-c/
+        FILE *fptr = fopen(fileName, "r");
+
+        if (fptr == NULL){
+            printError("ERROR: Could not open script file.");
+            return 1;
+        } 
+        else{
+            // read the file
+            char line[50]; // Declare the character array for each line to be read from file
+
+            // Read the data from the file using fgets() method
+            while (fgets(line, 50, fptr) != NULL) {
+                line[strcspn(line, "\n")] = '\0'; // remove newline from line
+
+                if(line[0] == '\0') { // empty input = do nothing 
+                    continue;
+                }
+
+                // tokenize inputs at each line like it is done in interactive mode
+                char* arguments[4]; // max is 4 for RQ
+                char* token = strtok(line, " ");
+                int tokenCount = 0;
+
+                while(token != NULL){ // get all arguments from input
+                    arguments[tokenCount] = token;
+                    token = strtok(NULL, " ");
+                    tokenCount++;
+                }
+                
+                // make commands case insensitive, i.e. should accept rq,RQ,rl,RL,stat,STAT,c,C,exit,EXIT
+                lowercase(arguments[0]);
+
+                // RQ (Request Memory / allocate): Needs 4 arguments and must check if they are valid arguments
+                if(strcmp(arguments[0], "rq") == 0){
+                    if(  tokenCount == 4  ){
+                        allocate(  arguments[1], atoi(arguments[2]), arguments[3] );
+                    }
+                }
+                // RL (Release Memory / Deallocate): Needs 2 arguments and must check if they are valid arguments
+                else if(strcmp(arguments[0], "rl") == 0){
+                    if(  tokenCount == 2  ){
+                        deallocate(  arguments[1]  );
+                    }
+                }
+                // ignore STAT 
+
+                // C (Compact): Needs 1 argument
+                else if(strcmp(arguments[0], "c") == 0){
+                    if(  tokenCount == 1  ){
+                        /* TODO*/
+                        compact();
+                    }
+                }
+                // EXIT: Needs 1 argument
+                else if(strcmp(arguments[0], "exit") == 0){
+                    if(tokenCount == 1){
+                        break;
+                    }
+                    
+                }
+                // If command is not recognized, do nothing and continue
+                else{
+                    continue;
+                }
+
+            }
+
+            // Closing the file using fclose()
+            fclose(fptr);
+
+            // Final STAT output after file read ends
+            status();
+        }
+
 		
     } else {
         printError("ERROR Invalid number of arguments.\n");
