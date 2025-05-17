@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <string.h>
 
+typedef enum { false, true } bool; // for returning bool in isHole and hasEnoughSpace functions since I can't add the library stdbool.h based on assignment restrictions
+
 const char *HOLE_PID = "Unused";
 
 // *************************************** BLOCK ***************************************
@@ -74,7 +76,6 @@ void lowercase(char *s) {
     
 }
 
-
 // *************************************************************************************
 
 
@@ -124,14 +125,14 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
             current = current->next;
         }
 
-        printError("ERROR: Not enough memory");
+        printError("ERROR: Not enough memory.");
         return;
 
     } else if (flag == 'b' || flag == 'w') {
 
         Block *bestFit = NULL; // for best-fit logic
         Block *worstFit = NULL; // for worst-fit logic
-        int bestFitSize = memory->total_memory; // possible max size
+        int bestFitSize = memory.total_memory; // possible max size
         int worstFitSize = -1;
         Block *bestFitPrev = NULL; // previous block of bestFit
         Block *worstFitPrev = NULL; // previous block of worstFit
@@ -164,7 +165,7 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
             // Best-fit logic
 
             if (bestFit == NULL) {
-                printError("ERROR: Not enough memory");
+                printError("ERROR: Insufficient memory to allocate to the request.");
                 return;
             }
 
@@ -193,7 +194,7 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
         // Worst-fit logic
 
             if (worstFit == NULL) {
-                printError("ERROR: Not enough memory");
+                printError("ERROR: Insufficient memory to allocate to the request.");
                 return;
             }
 
@@ -220,7 +221,7 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
         }
 
     } else {
-        printError("ERROR: Invalid allocation strategy");
+        printError("ERROR: Invalid allocation strategy.");
         return;
     }
     
@@ -273,6 +274,8 @@ void printError(char *error){
 /*
 Prints an error message to the screen.
 */
+
+    fprintf(stderr, "%s\n", error); // print error to standard error output stream
 }
 
 
@@ -327,7 +330,7 @@ int main(int argc, char *argv[]) {
         }
 		
 		// TODO: make commands case insensitive, i.e. should accept rq,RQ,rl,RL,stat,STAT,c,C,exit,EXIT
-        arguments[0] = lowercase(arguments[0]);
+        lowercase(arguments[0]);
 
         // RQ (Request Memory / allocate): Needs 4 arguments and must check if they are valid arguments
         if(strcmp(arguments[0], "rq") == 0){
