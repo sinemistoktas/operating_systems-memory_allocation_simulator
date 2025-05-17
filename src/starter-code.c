@@ -4,7 +4,7 @@
 #include <string.h>
 
 typedef enum { false, true } bool; // for returning bool in isHole and hasEnoughSpace functions since I can't add the library stdbool.h based on assignment restrictions
-
+void printError(char *error); // function prototype for early calls
 const char *HOLE_PID = "Unused";
 
 // *************************************** BLOCK ***************************************
@@ -38,9 +38,9 @@ void printBlock(Block *b) {
     int end = b->base + b->limit - 1;
 
     if (isHole(b)) {
-        printf("Addresses [%d:%d] Unused\n", start, end);
+        printf("Addresses [%d:%d] Unused\n", start, end); // handles hole case print
     } else {
-        printf("Addresses [%d:%d] Process %s\n", start, end, b->PID);
+        printf("Addresses [%d:%d] Process %s\n", start, end, b->PID); // handles non-hole case print
     }
 }
 
@@ -254,6 +254,14 @@ Addresses [625575:725100] Process P6
 Addresses [725001] . . .
 
 */
+
+    Block *current = memory.head;
+
+    while (current != NULL){
+        printBlock(current); // custom print function for blocks
+        current = current->next; // update current pointer
+    }
+    
 }
 
 
