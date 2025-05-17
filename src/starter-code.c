@@ -177,7 +177,7 @@ Type = 'F' or 'f' for first fit, 'B' or 'b' for best fit, 'W' or 'w' for worst f
                     bestFit = current; // save current as best fit block
                     bestFitSize = current->limit; // update bestFitSize
                 }
-                else if (current->limit > worstFitSize){ // check if current is the biggest hole we have found -> for worst-fit logic
+                if (current->limit > worstFitSize){ // check if current is the biggest hole we have found -> for worst-fit logic
                     worstFit = current; // save current as worst fit block
                     worstFitSize = current->limit; // update worstFitSize
                 }
