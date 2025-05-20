@@ -5,6 +5,7 @@
 
 typedef enum { false, true } bool; // for returning bool in isHole and hasEnoughSpace functions since I can't add the library stdbool.h based on assignment restrictions
 void printError(char *error); // function prototype for early calls
+int scripted_mode = 0; // global variable to keep track if scripted mode is on or off -> affects printError
 const char *HOLE_PID = "Unused";
 
 // *************************************** BLOCK ***************************************
@@ -380,8 +381,9 @@ void printError(char *error){
 /*
 Prints an error message to the screen.
 */
-
-    fprintf(stderr, "%s\n", error); // print error to standard error output stream
+    if (!scripted_mode) {
+        fprintf(stderr, "%s\n", error); // print error to standard error output stream
+    }
 }
 
 
@@ -406,6 +408,8 @@ int main(int argc, char *argv[]) {
 
     } else if(argc == 3) {
 		/* TODO: Scripted mode*/
+
+        scripted_mode = 1; // scripted mode on -> for printError
 
         int int_memory_amount = atoi(argv[1]);  // get initial memory amount from first argument
         char *fileName = argv[2]; // get file name from second argument
@@ -509,7 +513,7 @@ int main(int argc, char *argv[]) {
         }
 
 
-        char* arguments[3];
+        char* arguments[4]; // changed from 3 to 4 with instructor's approval
         char* token = strtok(input, " ");
         int tokenCount = 0;
 
@@ -561,7 +565,7 @@ int main(int argc, char *argv[]) {
             }
         }
         // EXIT: Needs 1 argument
-        else if(strcmp(arguments[0], "exit") == 0){
+        else if(strcmp(arguments[0], "exit") == 0 || strcmp(arguments[0], "x") == 0){
             if(tokenCount == 1){
                 printf("Exiting program.\n");
                 exit(0);
