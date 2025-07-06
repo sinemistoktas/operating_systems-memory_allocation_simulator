@@ -1,144 +1,135 @@
-# COMP 304 - Project 2: Contiguous Memory Allocation
-**Group Name:** Hole Lotta Trouble  
-**Student Name:** Sinemis Toktaş  
-**Student ID:** 0076644  
+# Memory Allocation Simulator
+**Operating Systems - Project 2**  
+**Spring 2025 | Koç University**
 
-## Project Description
-This project implements a memory management simulator that supports contiguous memory allocation using three different strategies: First Fit, Best Fit, and Worst Fit. The simulator can operate in both interactive and scripted modes, simulating the behaviors of RQ (Request Memory), RL (Release Memory), C (Compact), STAT (Status Report), and EXIT commands.
+## Contributors
+- **Sinemis Toktaş**
 
----
+## Overview
+This repository showcases Project 2 from the Operating Systems course completed at Koç University during Spring 2025. The project implements a comprehensive memory management simulator supporting contiguous memory allocation using three fundamental algorithms with both interactive and scripted execution modes.
 
-## Implementation Details
-### Data Structures
-- **Block (struct):** Represents a memory segment. Each block stores:
-  - `PID` (char[10]) – Process ID or "Unused" for holes
-  - `base` (int) – Start address
-  - `limit` (int) – Size in bytes
-  - `prev` and `next` pointers for a doubly linked list
+## Key Features
 
-- **Memory (struct):** Implemented as a doubly linked list
-  - `head` – pointer to the first Block
-  - `total_memory` – total available memory, set by the user
+### **Allocation Algorithms**
+- **First Fit (F):** Allocates memory in the first available hole large enough
+- **Best Fit (B):** Allocates memory in the smallest suitable hole
+- **Worst Fit (W):** Allocates memory in the largest available hole
+- **Case-Insensitive:** Supports both uppercase and lowercase strategy flags
 
-### Key Functions
-- `createBlock(PID, base, limit)` – Allocates and initializes a new memory block.
-- `allocate(PID, size, strategy)` – Handles memory requests using First, Best, or Worst Fit.
-- `deallocate(PID)` – Frees memory and merges adjacent holes.
-- `compact()` – Moves all used blocks to the top and creates one large hole at the bottom.
-- `status()` – Prints the current memory layout.
-- `printBlock()` – Utility to display each block's status.
-- `lowercase()` – Converts given string to lowercase, used for supporting case-insensitive flag arguments.
-- `printError()` – Outputs formatted error messages to stderr.
+### **Core Operations**
+- **Request (RQ):** Allocate contiguous memory blocks with specified strategy
+- **Release (RL):** Deallocate memory with automatic adjacent hole merging
+- **Compact (C):** Consolidate fragmented holes into single contiguous block
+- **Status (STAT):** Display comprehensive memory layout and allocation map
+- **Exit (X):** Graceful program termination
 
----
+### **Execution Modes**
+- **Interactive Mode:** Real-time command processing with user prompts
+- **Scripted Mode:** Batch execution from command files with final status output
+- **Error Handling:** Robust validation with detailed error messages
 
-## Features
-- **Doubly linked list memory representation** for easier merging and compaction
-- **Scripted mode** using file input (no intermediate prompts)
-- **Final STAT output** shown only once at end of script (in scripted mode)
-- **Case-insensitive** command parsing (except for process ID)
-- **Edge case handling** done by printing error messages (invalid size, duplicate PID, invalid strategy argument, nonexistent PID, unopenable script file)
+### **Advanced Features**
+- **Dynamic Memory Management:** Doubly-linked list for efficient operations
+- **Automatic Hole Merging:** Combines adjacent free blocks on deallocation
+- **Fragmentation Prevention:** Smart compaction algorithm
+- **Memory Safety:** Comprehensive bounds checking and validation
 
----
+## Usage
 
-## How to Run
-Compile `starter-code.c`:
+### **Interactive Mode**
 ```bash
+# Compile and run
 gcc starter-code.c -o allocator
+./allocator 1048576
+
+# Example session
+allocator> RQ P0 40000 W     # Request 40KB using Worst Fit
+allocator> RQ P1 25000 F     # Request 25KB using First Fit  
+allocator> STAT              # Display memory status
+allocator> RL P0             # Release P0's memory
+allocator> C                 # Compact memory holes
+allocator> X                 # Exit
 ```
 
-### Interactive Mode:
-Total memory amount is set by the user.
+### **Scripted Mode**
 ```bash
-./allocator <total memory amount>
-```
-Example: 
-```bash
-./allocator 100
-```
+# Execute batch commands
+./allocator 1048576 commands.txt
 
-### Scripted Mode:
-Total memory amount and name of the scirpt txt file are given by the user.
-```bash
-./allocator <total memory amount> <script txt file name>
-```
-Example: 
-```bash
-./allocator 100 commands-to-exexcute.txt
+# Example commands.txt:
+# RQ P1 100000 B
+# RQ P2 50000 F  
+# RL P1
+# C
 ```
 
+## Implementation Highlights
 
----
+### **Data Structures**
+- **Block Structure:** Doubly-linked list nodes with PID, base address, and size
+- **Memory Management:** Dynamic hole tracking with efficient insertion/deletion
+- **Process Validation:** Duplicate PID prevention and existence checking
 
-## External Resources & AI Assistance
+### **Key Algorithms**
+```c
+// Memory allocation with strategy selection
+void allocate(char* PID, int size, char *strategy)
 
-### Web Resources
-- [GeeksforGeeks - File handling in C](https://www.geeksforgeeks.org/basics-file-handling-c/)
-- [GeeksforGeeks - tolower() function in C](https://www.geeksforgeeks.org/tolower-function-in-c/)
+// Deallocation with automatic merging
+void deallocate(char* PID)  
 
-### AI Usage (ChatGPT - OpenAI GPT-4, May 2025)
-AI assistance was used during the design, debugging, and testing of this project. Below is a detailed breakdown of the prompts and responses:
+// Memory compaction with address recalculation
+void compact()
 
-&nbsp;
+// Comprehensive status reporting
+void status()
+```
 
-**🔹 Prompt 1: "Which design is best for memory: array, linked list, stack?"**
+### **File Structure**
+```
+memory-allocator/
+├── starter-code.c        # Main implementation
+├── allocator            # Compiled executable  
+├── Makefile            # Build configuration
+└── README.md           # This file
+```
 
-**AI Response Summary:**
+## Sample Output
 
-- For dynamic memory allocation simulators, linked lists are preferred over arrays and stacks.
+### **Memory Status Display**
+```
+Addresses [0:315000] Process P1
+Addresses [315001:512500] Process P3  
+Addresses [512501:625575] Unused
+Addresses [625576:725100] Process P6
+Addresses [725101:1048575] Unused
+```
 
-- Arrays are not flexible for fragmentation and merging (fixed size, hard to insert/delete).
+### **Error Handling**
+```
+ERROR: Insufficient memory to allocate to the request.
+ERROR: Given PID already exists!
+ERROR: Given PID does not exist in memory.
+```
 
-- Stacks follow LIFO logic and are too restrictive — only suitable for temporary storage or undo operations.
+## Technical Features
 
-- Linked lists (especially when representing holes and process blocks) allow easy insertion, deletion, and merging — ideal for representing fragmented memory.
+### **Memory Management**
+- **Efficient Allocation:** O(n) time complexity for all allocation strategies
+- **Smart Merging:** Automatic combination of adjacent holes during deallocation
+- **Compaction Strategy:** Moves all processes to top, creates single hole at bottom
+- **Fragmentation Handling:** Minimizes external fragmentation through compaction
 
-- Therefore, linked lists offer the best flexibility and correctness for simulating memory allocation.  
+### **Robust Design**
+- **Input Validation:** Comprehensive argument checking and error reporting
+- **Memory Safety:** Proper allocation/deallocation with leak prevention
+- **Edge Case Handling:** Boundary conditions and invalid operations
+- **Cross-Platform:** Compatible across different Linux distributions
 
-&nbsp;
-
-
-**🔹 Prompt 2: "Is doubly linked list a better idea than single linked list?"**
-
-**AI Response Summary:**
-
-A doubly linked list is a better choice for simulating memory allocation compared to a singly linked list, especially when:
-
-You need to efficiently merge adjacent holes during deallocation.
-
-You want to compact memory, which involves rebuilding or traversing the list in both directions.
-
-While a singly linked list can work, it requires managing a separate prev pointer externally, which complicates the code and increases the chance of bugs.
-
-The AI recommended a doubly linked list to simplify implementation and ensure correct and maintainable memory operations. This suggestion was implemented in the final design.
-
-&nbsp;
-
-
-**🔹 Prompt 3: "Can you give me test cases and edge cases for RQ, RL, and C?"**
-
-**AI Response Summary:**
-
-AI provided a categorized and structured set of test cases (both in the form of script text files and command line scripts) for:
-
-- RQ (Request): basic allocations, strategy comparisons (First Fit, Best Fit, Worst Fit), duplicate PID errors, invalid sizes, and insufficient memory
-
-- RL (Release): standard deallocation, merging with previous/next holes, head/tail position tests, and handling of invalid or nonexistent PIDs
-
-- C (Compact): shifting processes up, merging fragmented holes, and verifying no effect when memory is already compacted
-
-- Edge cases were highlighted, including:
-
-  - Deallocating the head or last node
-
-  - Holes surrounding a process block
-
-  - Entire memory being a process or hole
-
-  - Worst/best-fit tie scenarios
-
-&nbsp;
-
-These test cases were used to validate correctness and memory integrity under different conditions.
-
----
+## Learning Outcomes
+This project demonstrates proficiency in:
+- **Memory Management:** Practical implementation of allocation algorithms
+- **Data Structures:** Dynamic linked list operations and manipulation
+- **Algorithm Analysis:** Understanding of different allocation strategy trade-offs
+- **System Design:** Modular architecture with clean separation of concerns
+- **C Programming:** Advanced pointer manipulation and memory operations
